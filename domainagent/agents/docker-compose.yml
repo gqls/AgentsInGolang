@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  receiver:
+    build:
+      context: ./receiverAgent
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - agent-network
+
+  sender:
+    build:
+      context: ./senderAgent
+      dockerfile: Dockerfile
+    depends_on:
+      - receiver
+    environment:
+      - SERVER_ADDR=receiver:8080
+    networks:
+      - agent-network
+
+networks:
+  agent-network:
+    driver: bridge
