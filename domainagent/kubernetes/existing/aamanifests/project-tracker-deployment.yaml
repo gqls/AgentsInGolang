@@ -1,0 +1,501 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-tracker
+  labels:
+    app: project-tracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-tracker
+  template:
+    metadata:
+      labels:
+        app: project-tracker
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html-content
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html-content
+          configMap:
+            name: project-tracker-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-tracker-service
+spec:
+  selector:
+    app: project-tracker
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project-tracker-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Domain Website Generator - Project Tracker</title>
+      <style>
+        :root {
+          --primary: #2c3e50;
+          --secondary: #3498db;
+          --accent: #e74c3c;
+          --light: #ecf0f1;
+          --dark: #2c3e50;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+          background-color: #f5f5f5;
+          color: var(--dark);
+          line-height: 1.6;
+        }
+
+        .login-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: var(--light);
+        }
+
+        .login-form {
+          background: white;
+          padding: 2rem;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          width: 350px;
+        }
+
+        .login-form h2 {
+          text-align: center;
+          margin-bottom: 1.5rem;
+          color: var(--primary);
+        }
+
+        .form-group {
+          margin-bottom: 1rem;
+        }
+
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+        }
+
+        input {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 1rem;
+        }
+
+        button {
+          width: 100%;
+          padding: 0.75rem;
+          background-color: var(--secondary);
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+
+        button:hover {
+          background-color: #2980b9;
+        }
+
+        .container {
+          width: 90%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem 1rem;
+        }
+
+        header {
+          background-color: var(--primary);
+          color: white;
+          padding: 1rem 0;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
+
+        nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 1rem;
+        }
+
+        .logo {
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+
+        .nav-links {
+          display: flex;
+          list-style: none;
+        }
+
+        .nav-links li {
+          margin-left: 1.5rem;
+        }
+
+        .nav-links a {
+          color: white;
+          text-decoration: none;
+          transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+          color: var(--secondary);
+        }
+
+        .dashboard {
+          display: none;
+        }
+
+        .section {
+          background: white;
+          border-radius: 8px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+          margin-bottom: 1rem;
+          color: var(--primary);
+        }
+
+        .phase {
+          margin-bottom: 2rem;
+        }
+
+        .phase-title {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: var(--secondary);
+          color: white;
+          padding: 0.75rem 1rem;
+          border-radius: 4px;
+          margin-bottom: 1rem;
+          cursor: pointer;
+        }
+
+        .tasks {
+          padding-left: 1.5rem;
+        }
+
+        .task {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 0;
+          border-bottom: 1px solid #eee;
+        }
+
+        .task-status {
+          display: flex;
+          align-items: center;
+        }
+
+        .status-indicator {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          margin-right: 0.5rem;
+        }
+
+        .not-started {
+          background-color: #95a5a6;
+        }
+
+        .in-progress {
+          background-color: #f39c12;
+        }
+
+        .completed {
+          background-color: #27ae60;
+        }
+
+        .logout-btn {
+          background-color: var(--accent);
+          padding: 0.5rem 1rem;
+          margin-left: auto;
+          display: block;
+          width: 200px;
+        }
+
+        .logout-btn:hover {
+          background-color: #c0392b;
+        }
+
+        .agent-details {
+          margin-top: 1rem;
+          border-left: 3px solid var(--secondary);
+          padding-left: 1rem;
+        }
+
+        .hidden {
+          display: none;
+        }
+      </style>
+    </head>
+    <body>
+      <!-- Login Page -->
+      <div class="login-container" id="loginPage">
+        <div class="login-form">
+          <h2>Project Tracker Login</h2>
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" required>
+            </div>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Dashboard Page -->
+      <div class="dashboard" id="dashboardPage">
+        <header>
+          <nav>
+            <div class="logo">Domain Website Generator</div>
+            <ul class="nav-links">
+              <li><a href="#project-plan">Project Plan</a></li>
+              <li><a href="#agent-network">Agent Network</a></li>
+              <li><a href="#deployment">Deployment</a></li>
+            </ul>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+          </nav>
+        </header>
+        
+        <div class="container">
+          <section class="section" id="project-plan">
+            <h2>Project Plan</h2>
+            
+            <div class="phase">
+              <div class="phase-title">
+                <h3>Phase 1: Foundation Setup</h3>
+                <span>Current Phase</span>
+              </div>
+              <div class="tasks">
+                <div class="task">
+                  <div class="task-name">Create project tracking website</div>
+                  <div class="task-status">
+                    <div class="status-indicator in-progress"></div>
+                    <div>In Progress</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Containerize existing agents</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Set up Kubernetes on OVH</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="phase">
+              <div class="phase-title">
+                <h3>Phase 2: Domain Analysis Framework</h3>
+                <span>Upcoming</span>
+              </div>
+              <div class="tasks">
+                <div class="task">
+                  <div class="task-name">Create domain name analyzer agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Build subject category identification agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Develop revenue potential estimator agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="phase">
+              <div class="phase-title">
+                <h3>Phase 3: Content Generation Pipeline</h3>
+                <span>Upcoming</span>
+              </div>
+              <div class="tasks hidden">
+                <div class="task">
+                  <div class="task-name">Implement topic research agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Build content planning agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Create content generation agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+                <div class="task">
+                  <div class="task-name">Develop page structure agent</div>
+                  <div class="task-status">
+                    <div class="status-indicator not-started"></div>
+                    <div>Not Started</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="phase">
+              <div class="phase-title">
+                <h3>Phase 4: SEO & Revenue Integration</h3>
+                <span>Upcoming</span>
+              </div>
+              <div class="tasks hidden">
+                <!-- Similar task structure as above -->
+              </div>
+            </div>
+            
+            <div class="phase">
+              <div class="phase-title">
+                <h3>Phase 5: Deployment & Monitoring</h3>
+                <span>Upcoming</span>
+              </div>
+              <div class="tasks hidden">
+                <!-- Similar task structure as above -->
+              </div>
+            </div>
+          </section>
+          
+          <section class="section" id="agent-network">
+            <h2>Agent Network Structure</h2>
+            <div class="agent-details">
+              <h3>Current Agents</h3>
+              <p><strong>Sender Agent:</strong> Basic TCP communication agent that initiates messages.</p>
+              <p><strong>Receiver Agent:</strong> Agent that listens for and responds to messages.</p>
+              
+              <h3>Planned Agent Network</h3>
+              <p>The full agent network will consist of specialized agents working in a pipeline to analyze domains, create content, optimize for SEO, and generate revenue.</p>
+            </div>
+          </section>
+          
+          <section class="section" id="deployment">
+            <h2>Deployment Status</h2>
+            <div class="agent-details">
+              <h3>Current Deployment</h3>
+              <p><strong>Status:</strong> Local development only</p>
+              <p><strong>Next Step:</strong> Containerize existing agents and deploy to Kubernetes cluster</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <script>
+        // Simple authentication for demonstration purposes
+        // In production, use proper authentication with server-side validation
+        const loginForm = document.getElementById('loginForm');
+        const loginPage = document.getElementById('loginPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const phaseTitles = document.querySelectorAll('.phase-title');
+        
+        // Hardcoded credentials (replace with proper authentication)
+        const validUsername = 'aaa';
+        const validPassword = 'entersesame!';
+        
+        // Check if user is already logged in
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+          showDashboard();
+        }
+
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+          
+          if (username === validUsername && password === validPassword) {
+            localStorage.setItem('isLoggedIn', 'true');
+            showDashboard();
+          } else {
+            alert('Invalid credentials. Please try again.');
+          }
+        });
+        
+        logoutBtn.addEventListener('click', function() {
+          localStorage.removeItem('isLoggedIn');
+          loginPage.style.display = 'flex';
+          dashboardPage.style.display = 'none';
+        });
+        
+        function showDashboard() {
+          loginPage.style.display = 'none';
+          dashboardPage.style.display = 'block';
+        }
+
+        // Toggle task visibility when clicking on phase titles
+        phaseTitles.forEach(title => {
+          title.addEventListener('click', function() {
+            const tasks = this.nextElementSibling;
+            tasks.classList.toggle('hidden');
+          });
+        });
+      </script>
+    </body>
+    </html>

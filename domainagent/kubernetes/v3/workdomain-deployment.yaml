@@ -1,0 +1,42 @@
+# This deployment is for the workdomain.co.uk website
+# It uses the existing project-tracker-html ConfigMap that you already have
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-tracker
+  labels:
+    app: project-tracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-tracker
+  template:
+    metadata:
+      labels:
+        app: project-tracker
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html-content
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html-content
+          configMap:
+            name: project-tracker-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-tracker-service
+spec:
+  selector:
+    app: project-tracker
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP  # Changed from LoadBalancer to ClusterIP as we're using Ingress
