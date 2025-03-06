@@ -1,0 +1,36 @@
+# 1. Create a PersistentVolume for image storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: feline-images-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /mnt/feline-images
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - aak8s-worker-1  # Adjust to whichever node you want to store images on
+
+---
+# 2. Create a PersistentVolumeClaim to use the PV
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: feline-images-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 1Gi

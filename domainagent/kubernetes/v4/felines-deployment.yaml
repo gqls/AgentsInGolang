@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: felines-website
+  labels:
+    app: felines-website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: felines-website
+  template:
+    metadata:
+      labels:
+        app: felines-website
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: aak8s-worker-1
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html-content
+              mountPath: /usr/share/nginx/html
+            - name: images
+              mountPath: /usr/share/nginx/html/images
+      volumes:
+        - name: html-content
+          configMap:
+            name: feline-html-config
+        - name: images
+          persistentVolumeClaim:
+            claimName: feline-images-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feline-imagery-service
+spec:
+  selector:
+    app: felines-website
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: feline-imagery
+      port: 8088
+      targetPort: 8088
+  type: ClusterIP
