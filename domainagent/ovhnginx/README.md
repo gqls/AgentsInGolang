@@ -1,3 +1,7 @@
+ssh -o IdentitiesOnly=yes -i ~/.ssh/ovh ubuntu@51.89.148.216
+SrvOVH0114123!
+
+
 server {
 listen 80;
 server_name felines.co.uk;

@@ -20,6 +20,9 @@ kubectl get ingress
 kubectl describe ingress workdomain-ingress
 kubectl describe svc ingress-nginx-controller -n ingress-nginx
 
+kubectl -n monitoring rollout restart deployment prometheus
+kubectl -n monitoring rollout restart deployment grafana
+
 OVH
 nginx
 proxy_pass http://35.214.74.66:30080;

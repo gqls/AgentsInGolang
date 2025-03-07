@@ -1,0 +1,23 @@
+# grafana-local-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-local-pv
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/grafana"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - aak8s-worker-1

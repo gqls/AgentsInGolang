@@ -1,0 +1,23 @@
+# local-pv.yaml - create a local persistent volume for both prometheus and grafana
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-local-pv
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/prometheus"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - aak8s-worker-1
